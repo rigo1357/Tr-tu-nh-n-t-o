@@ -1,0 +1,104 @@
+.problem-page {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #f0f9ff 0%, #e0f2fe 40%, #f8fafc 100%);
+  color: #0f172a;
+}
+
+.problem-nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.problem-nav-link {
+  color: #0369a1;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.problem-nav-link:hover {
+  text-decoration: underline;
+}
+
+.problem-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+.problem-title {
+  font-size: 1.75rem;
+  margin: 0 0 12px;
+  color: #0c4a6e;
+}
+
+.problem-lead {
+  margin: 0 0 28px;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.problem-section {
+  margin-bottom: 36px;
+}
+
+.problem-section h2 {
+  font-size: 1.2rem;
+  color: #075985;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #bae6fd;
+}
+
+.problem-pre-block {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  line-height: 1.65;
+}
+
+.problem-pre-block ul {
+  margin: 8px 0 12px;
+  padding-left: 22px;
+}
+
+.problem-note {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0 0 12px;
+}
+
+.problem-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.problem-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.problem-table th,
+.problem-table td {
+  border: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.problem-table th {
+  background: #f0f9ff;
+  color: #0c4a6e;
+  font-weight: 600;
+}
+
+.problem-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
