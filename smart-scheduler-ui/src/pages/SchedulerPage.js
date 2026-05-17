@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer,
+  Tooltip, Legend, ResponsiveContainer, BarChart, Bar, Cell,
 } from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -600,37 +600,86 @@ function ScheduleTable({ schedule }) {
   });
 
   return (
-    <div style={{ marginTop: '20px', overflowX: 'auto' }}>
-      <table className="schedule-table">
+    <div style={{ 
+      marginTop: '20px', 
+      overflowX: 'auto',
+      backgroundColor: '#ffffff',
+      padding: '20px',
+      borderRadius: '12px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+    }}>
+      <table className="schedule-table" style={{ 
+        backgroundColor: '#ffffff',
+        border: '2px solid #e2e8f0'
+      }}>
         <thead>
           <tr>
-            <th className="schedule-th">Buổi</th>
-            {days.map(day => <th key={day} className="schedule-th">{dayTitle[day]}</th>)}
-            <th className="schedule-th">Khung giờ (45' / tiết)</th>
+            <th className="schedule-th" style={{ 
+              backgroundColor: '#0c4a6e', 
+              color: '#ffffff',
+              border: '1px solid #0369a1',
+              padding: '14px'
+            }}>Buổi</th>
+            {days.map(day => <th key={day} className="schedule-th" style={{ 
+              backgroundColor: '#0c4a6e', 
+              color: '#ffffff',
+              border: '1px solid #0369a1',
+              padding: '14px'
+            }}>{dayTitle[day]}</th>)}
+            <th className="schedule-th" style={{ 
+              backgroundColor: '#0c4a6e', 
+              color: '#ffffff',
+              border: '1px solid #0369a1',
+              padding: '14px'
+            }}>Khung giờ (45' / tiết)</th>
           </tr>
         </thead>
         <tbody>
           {sessions.map(session => (
             <tr key={session}>
-              <td className="session-label">{session}</td>
+              <td className="session-label" style={{
+                padding: '12px',
+                backgroundColor: '#f8fafc',
+                fontWeight: 'bold',
+                border: '1px solid #e2e8f0',
+                color: '#0c4a6e'
+              }}>{session}</td>
               {days.map(day => {
                 const key = `${day}_${session}`;
                 const items = scheduleMap[key] || [];
                 return (
-                  <td key={key} className="schedule-td">
-                    {items.length === 0 ? <span style={{ color: '#475569', fontStyle: 'italic' }}>Trống</span> :
+                  <td key={key} className="schedule-td" style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e2e8f0',
+                    padding: '12px',
+                    color: '#1e293b'
+                  }}>
+                    {items.length === 0 ? <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Trống</span> :
                       items.map((item, idx) => (
-                        <div key={idx} style={{ backgroundColor: item.is_retake ? 'rgba(251,113,133,0.2)' : 'rgba(59,130,246,0.2)', borderLeft: `4px solid ${item.is_retake ? '#fb7185' : '#38bdf8'}`, borderRadius: '10px', padding: '8px', marginBottom: '8px' }}>
-                          <strong>{item.subject}</strong>
-                          <div style={{ fontSize: '12px', color: '#94a3b8' }}>GV: {item.instructor || 'Chưa cập nhật'}</div>
-                          <div style={{ fontSize: '12px', color: '#94a3b8' }}>{item.start_time} - {item.end_time}</div>
-                          {item.is_retake && <div style={{ fontSize: '11px', color: '#fda4af' }}>Môn học lại</div>}
+                        <div key={idx} style={{ 
+                          backgroundColor: item.is_retake ? 'rgba(251,113,133,0.15)' : 'rgba(59,130,246,0.15)', 
+                          borderLeft: `4px solid ${item.is_retake ? '#fb7185' : '#3b82f6'}`, 
+                          borderRadius: '10px', 
+                          padding: '10px', 
+                          marginBottom: '8px',
+                          border: `1px solid ${item.is_retake ? 'rgba(251,113,133,0.3)' : 'rgba(59,130,246,0.3)'}`
+                        }}>
+                          <strong style={{ color: '#1e293b' }}>{item.subject}</strong>
+                          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>GV: {item.instructor || 'Chưa cập nhật'}</div>
+                          <div style={{ fontSize: '12px', color: '#64748b' }}>{item.start_time} - {item.end_time}</div>
+                          {item.is_retake && <div style={{ fontSize: '11px', color: '#dc2626', fontWeight: '500', marginTop: '4px' }}>📚 Môn học lại</div>}
                         </div>
                       ))}
                   </td>
                 );
               })}
-              <td style={{ padding: '12px', border: '1px solid rgba(148,163,184,0.15)', color: '#a5b4fc' }}>{sessionTimes[session].join(' → ')}</td>
+              <td style={{ 
+                padding: '12px', 
+                border: '1px solid #e2e8f0', 
+                color: '#64748b',
+                backgroundColor: '#f8fafc',
+                fontSize: '13px'
+              }}>{sessionTimes[session].join(' → ')}</td>
             </tr>
           ))}
         </tbody>
@@ -651,6 +700,12 @@ function Scheduler() {
   const [algorithmUsed, setAlgorithmUsed] = useState(null);
   const [benchmarkResults, setBenchmarkResults] = useState(null);
   const [isBenchmarkLoading, setIsBenchmarkLoading] = useState(false);
+  const [visibleAlgorithms, setVisibleAlgorithms] = useState({
+    ga: true,
+    hill_climbing: true,
+    sa: true,
+    minimax: true
+  });
 
   const handleGenerate = async (formData) => {
     setIsLoading(true);
@@ -678,7 +733,8 @@ function Scheduler() {
       setSchedule(response.data);
       setConflicts(response.data.removed_conflicts || []);
       const algo = (formData.algorithm || 'ga').toLowerCase();
-      if ((algo === 'ga' || algo === 'sa') && response.data.convergence?.length) {
+      // All algorithms now return convergence data
+      if (response.data.convergence?.length) {
         setConvergenceData(response.data.convergence);
       } else {
         setConvergenceData(null);
@@ -713,12 +769,26 @@ function Scheduler() {
     try {
       const response = await api.post('/api/schedule/compare', lastPayload);
       setCompareResults(response.data);
+      // Reset visible algorithms to show all when new comparison is done
+      setVisibleAlgorithms({
+        ga: true,
+        hill_climbing: true,
+        sa: true,
+        minimax: true
+      });
     } catch (error) {
       const errorMessage = error.response?.data?.detail || 'Có lỗi xảy ra khi so sánh thuật toán';
       alert('Lỗi: ' + errorMessage);
     } finally {
       setIsComparing(false);
     }
+  };
+
+  const toggleAlgorithmVisibility = (algo) => {
+    setVisibleAlgorithms(prev => ({
+      ...prev,
+      [algo]: !prev[algo]
+    }));
   };
 
   return (
@@ -742,14 +812,42 @@ function Scheduler() {
                 {row.case} — {row.n_subjects} môn — Tốt nhất: {algoLabel[row.best_algorithm] || row.best_algorithm}
               </h4>
               <div style={{ overflowX: 'auto' }}>
-                <table className="compare-table schedule-table">
+                <table className="compare-table schedule-table" style={{ 
+                  backgroundColor: '#ffffff',
+                  border: '2px solid #e2e8f0'
+                }}>
                   <thead>
-                    <tr>
-                      <th className="schedule-th">Thuật toán</th>
-                      <th className="schedule-th">Chi phí (Cost)</th>
-                      <th className="schedule-th">Thời gian (ms)</th>
-                      <th className="schedule-th">Môn bị loại</th>
-                      <th className="schedule-th">Kết quả</th>
+                    <tr style={{ backgroundColor: '#f8fafc' }}>
+                      <th className="schedule-th" style={{ 
+                        backgroundColor: '#0c4a6e', 
+                        color: '#ffffff',
+                        border: '1px solid #0369a1',
+                        padding: '14px'
+                      }}>Thuật toán</th>
+                      <th className="schedule-th" style={{ 
+                        backgroundColor: '#0c4a6e', 
+                        color: '#ffffff',
+                        border: '1px solid #0369a1',
+                        padding: '14px'
+                      }}>Chi phí (Cost)</th>
+                      <th className="schedule-th" style={{ 
+                        backgroundColor: '#0c4a6e', 
+                        color: '#ffffff',
+                        border: '1px solid #0369a1',
+                        padding: '14px'
+                      }}>Thời gian (ms)</th>
+                      <th className="schedule-th" style={{ 
+                        backgroundColor: '#0c4a6e', 
+                        color: '#ffffff',
+                        border: '1px solid #0369a1',
+                        padding: '14px'
+                      }}>Môn bị loại</th>
+                      <th className="schedule-th" style={{ 
+                        backgroundColor: '#0c4a6e', 
+                        color: '#ffffff',
+                        border: '1px solid #0369a1',
+                        padding: '14px'
+                      }}>Kết quả</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -757,12 +855,39 @@ function Scheduler() {
                       const data = row.results[algo];
                       if (!data) return null;
                       return (
-                        <tr key={algo} className={algo === row.best_algorithm ? 'best-row' : ''}>
-                          <td className="schedule-td">{algoLabel[algo] || algo}</td>
-                          <td className="schedule-td">{data.cost}</td>
-                          <td className="schedule-td">{data.time_ms} ms</td>
-                          <td className="schedule-td">{data.removed_count} môn</td>
-                          <td className="schedule-td">{algo === row.best_algorithm ? '🏆 Tốt nhất' : ''}</td>
+                        <tr key={algo} className={algo === row.best_algorithm ? 'best-row' : ''} style={{
+                          backgroundColor: algo === row.best_algorithm ? '#f0fdf4' : '#ffffff'
+                        }}>
+                          <td className="schedule-td" style={{ 
+                            color: '#1e293b',
+                            border: '1px solid #e2e8f0',
+                            padding: '12px',
+                            fontWeight: algo === row.best_algorithm ? '600' : '400'
+                          }}>{algoLabel[algo] || algo}</td>
+                          <td className="schedule-td" style={{ 
+                            color: '#1e293b',
+                            border: '1px solid #e2e8f0',
+                            padding: '12px',
+                            fontWeight: algo === row.best_algorithm ? '600' : '400'
+                          }}>{data.cost}</td>
+                          <td className="schedule-td" style={{ 
+                            color: '#1e293b',
+                            border: '1px solid #e2e8f0',
+                            padding: '12px',
+                            fontWeight: algo === row.best_algorithm ? '600' : '400'
+                          }}>{data.time_ms} ms</td>
+                          <td className="schedule-td" style={{ 
+                            color: '#1e293b',
+                            border: '1px solid #e2e8f0',
+                            padding: '12px',
+                            fontWeight: algo === row.best_algorithm ? '600' : '400'
+                          }}>{data.removed_count} môn</td>
+                          <td className="schedule-td" style={{ 
+                            color: algo === row.best_algorithm ? '#16a34a' : '#64748b',
+                            border: '1px solid #e2e8f0',
+                            padding: '12px',
+                            fontWeight: '600'
+                          }}>{algo === row.best_algorithm ? '🏆 Tốt nhất' : ''}</td>
                         </tr>
                       );
                     })}
@@ -774,30 +899,271 @@ function Scheduler() {
         </div>
       )}
       {compareResults?.results && (
-        <div style={{ marginTop: '16px', overflowX: 'auto' }}>
-          <table className="compare-table schedule-table">
-            <thead>
-              <tr>
-                <th className="schedule-th">Thuật toán</th>
-                <th className="schedule-th">Chi phí (Cost)</th>
-                <th className="schedule-th">Thời gian (ms)</th>
-                <th className="schedule-th">Môn bị loại</th>
-                <th className="schedule-th">Kết quả</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(compareResults.results).map(([algo, data]) => (
-                <tr key={algo} className={algo === compareResults.best_algorithm ? 'best-row' : ''}>
-                  <td className="schedule-td">{algoLabel[algo] || algo}</td>
-                  <td className="schedule-td">{data.cost}</td>
-                  <td className="schedule-td">{data.time_ms} ms</td>
-                  <td className="schedule-td">{data.removed_count} môn</td>
-                  <td className="schedule-td">{algo === compareResults.best_algorithm ? '🏆 Tốt nhất' : ''}</td>
+        <>
+          <div style={{ marginTop: '28px' }}>
+            <h3 style={{ color: '#0c4a6e', marginBottom: '16px' }}>So sánh chi phí và thời gian thực thi</h3>
+            
+            {/* Bộ lọc thuật toán */}
+            <div style={{ 
+              marginBottom: '20px', 
+              padding: '16px', 
+              backgroundColor: '#ffffff', 
+              borderRadius: '12px', 
+              border: '2px solid #e2e8f0',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}>
+              <h4 style={{ margin: '0 0 12px', color: '#075985', fontSize: '1rem' }}>
+                Chọn thuật toán hiển thị trên biểu đồ:
+              </h4>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                {Object.keys(compareResults.results).map((algo) => (
+                  <label 
+                    key={algo} 
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px',
+                      padding: '8px 16px',
+                      backgroundColor: visibleAlgorithms[algo] ? '#e0f2fe' : '#f1f5f9',
+                      borderRadius: '8px',
+                      border: `2px solid ${visibleAlgorithms[algo] ? '#0ea5e9' : '#cbd5e1'}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      fontWeight: 500
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={visibleAlgorithms[algo]}
+                      onChange={() => toggleAlgorithmVisibility(algo)}
+                      style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                    />
+                    <span style={{ color: visibleAlgorithms[algo] ? '#0c4a6e' : '#64748b' }}>
+                      {algoLabelVi[algo] || algo}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Biểu đồ so sánh chi phí */}
+            <div style={{ 
+              marginBottom: '32px', 
+              padding: '20px', 
+              backgroundColor: '#ffffff', 
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}>
+              <h4 style={{ color: '#075985', marginBottom: '12px' }}>Chi phí (Cost) - Thấp hơn là tốt hơn</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={Object.entries(compareResults.results)
+                  .filter(([algo]) => visibleAlgorithms[algo])
+                  .map(([algo, data]) => ({
+                    name: algoLabelVi[algo] || algo,
+                    cost: data.cost,
+                    isBest: algo === compareResults.best_algorithm
+                  }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="name" stroke="#475569" />
+                  <YAxis label={{ value: 'Chi phí (Cost)', angle: -90, position: 'insideLeft', style: { fill: '#475569' } }} stroke="#475569" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#ffffff', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }} 
+                  />
+                  <Legend />
+                  <Bar dataKey="cost" name="Chi phí">
+                    {Object.entries(compareResults.results)
+                      .filter(([algo]) => visibleAlgorithms[algo])
+                      .map(([algo, data], index) => (
+                        <Cell key={`cell-${index}`} fill={algo === compareResults.best_algorithm ? '#22c55e' : '#3b82f6'} />
+                      ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Biểu đồ so sánh thời gian */}
+            <div style={{ 
+              marginBottom: '32px', 
+              padding: '20px', 
+              backgroundColor: '#ffffff', 
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}>
+              <h4 style={{ color: '#075985', marginBottom: '12px' }}>Thời gian thực thi (ms) - Nhanh hơn là tốt hơn</h4>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={Object.entries(compareResults.results)
+                  .filter(([algo]) => visibleAlgorithms[algo])
+                  .map(([algo, data]) => ({
+                    name: algoLabelVi[algo] || algo,
+                    time: data.time_ms,
+                    isBest: algo === compareResults.best_algorithm
+                  }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="name" stroke="#475569" />
+                  <YAxis label={{ value: 'Thời gian (ms)', angle: -90, position: 'insideLeft', style: { fill: '#475569' } }} stroke="#475569" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#ffffff', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }} 
+                  />
+                  <Legend />
+                  <Bar dataKey="time" name="Thời gian (ms)">
+                    {Object.entries(compareResults.results)
+                      .filter(([algo]) => visibleAlgorithms[algo])
+                      .map(([algo, data], index) => (
+                        <Cell key={`cell-${index}`} fill={algo === compareResults.best_algorithm ? '#22c55e' : '#f59e0b'} />
+                      ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Biểu đồ hội tụ cho tất cả thuật toán */}
+            <div style={{ 
+              marginBottom: '32px', 
+              padding: '20px', 
+              backgroundColor: '#ffffff', 
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}>
+              <h4 style={{ color: '#075985', marginBottom: '12px' }}>Biểu đồ hội tụ - So sánh quá trình tối ưu</h4>
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="x" 
+                    type="number"
+                    label={{ value: 'Bước thực thi', position: 'insideBottom', offset: -4, style: { fill: '#475569' } }}
+                    stroke="#475569"
+                  />
+                  <YAxis 
+                    label={{ value: 'Chi phí (Cost)', angle: -90, position: 'insideLeft', style: { fill: '#475569' } }} 
+                    stroke="#475569"
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#ffffff', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }} 
+                  />
+                  <Legend />
+                  {Object.entries(compareResults.results)
+                    .filter(([algo]) => visibleAlgorithms[algo])
+                    .map(([algo, data], index) => {
+                      const colors = ['#2563eb', '#dc2626', '#16a34a', '#9333ea'];
+                      if (data.convergence && data.convergence.length > 0) {
+                        return (
+                          <Line
+                            key={algo}
+                            data={data.convergence}
+                            type="monotone"
+                            dataKey="cost"
+                            stroke={colors[index % colors.length]}
+                            dot={false}
+                            name={algoLabelVi[algo] || algo}
+                            strokeWidth={algo === compareResults.best_algorithm ? 3 : 2}
+                          />
+                        );
+                      }
+                      return null;
+                    })}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Bảng so sánh chi tiết */}
+          <div style={{ marginTop: '16px', overflowX: 'auto' }}>
+            <h4 style={{ color: '#075985', marginBottom: '12px' }}>Bảng so sánh chi tiết</h4>
+            <table className="compare-table schedule-table" style={{ 
+              backgroundColor: '#ffffff',
+              border: '2px solid #e2e8f0'
+            }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f8fafc' }}>
+                  <th className="schedule-th" style={{ 
+                    backgroundColor: '#0c4a6e', 
+                    color: '#ffffff',
+                    border: '1px solid #0369a1',
+                    padding: '14px'
+                  }}>Thuật toán</th>
+                  <th className="schedule-th" style={{ 
+                    backgroundColor: '#0c4a6e', 
+                    color: '#ffffff',
+                    border: '1px solid #0369a1',
+                    padding: '14px'
+                  }}>Chi phí (Cost)</th>
+                  <th className="schedule-th" style={{ 
+                    backgroundColor: '#0c4a6e', 
+                    color: '#ffffff',
+                    border: '1px solid #0369a1',
+                    padding: '14px'
+                  }}>Thời gian (ms)</th>
+                  <th className="schedule-th" style={{ 
+                    backgroundColor: '#0c4a6e', 
+                    color: '#ffffff',
+                    border: '1px solid #0369a1',
+                    padding: '14px'
+                  }}>Môn bị loại</th>
+                  <th className="schedule-th" style={{ 
+                    backgroundColor: '#0c4a6e', 
+                    color: '#ffffff',
+                    border: '1px solid #0369a1',
+                    padding: '14px'
+                  }}>Kết quả</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {Object.entries(compareResults.results).map(([algo, data]) => (
+                  <tr key={algo} className={algo === compareResults.best_algorithm ? 'best-row' : ''} style={{
+                    backgroundColor: algo === compareResults.best_algorithm ? '#f0fdf4' : '#ffffff'
+                  }}>
+                    <td className="schedule-td" style={{ 
+                      color: '#1e293b',
+                      border: '1px solid #e2e8f0',
+                      padding: '12px',
+                      fontWeight: algo === compareResults.best_algorithm ? '600' : '400'
+                    }}>{algoLabel[algo] || algo}</td>
+                    <td className="schedule-td" style={{ 
+                      color: '#1e293b',
+                      border: '1px solid #e2e8f0',
+                      padding: '12px',
+                      fontWeight: algo === compareResults.best_algorithm ? '600' : '400'
+                    }}>{data.cost}</td>
+                    <td className="schedule-td" style={{ 
+                      color: '#1e293b',
+                      border: '1px solid #e2e8f0',
+                      padding: '12px',
+                      fontWeight: algo === compareResults.best_algorithm ? '600' : '400'
+                    }}>{data.time_ms} ms</td>
+                    <td className="schedule-td" style={{ 
+                      color: '#1e293b',
+                      border: '1px solid #e2e8f0',
+                      padding: '12px',
+                      fontWeight: algo === compareResults.best_algorithm ? '600' : '400'
+                    }}>{data.removed_count} môn</td>
+                    <td className="schedule-td" style={{ 
+                      color: algo === compareResults.best_algorithm ? '#16a34a' : '#64748b',
+                      border: '1px solid #e2e8f0',
+                      padding: '12px',
+                      fontWeight: '600'
+                    }}>{algo === compareResults.best_algorithm ? '🏆 Tốt nhất' : ''}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
       {conflicts.length > 0 && (
         <div style={{ marginTop: '20px', padding: '15px', borderRadius: '12px', backgroundColor: '#2f1f2f', border: '1px solid rgba(248,113,113,0.4)', color: '#fecaca' }}>
@@ -853,25 +1219,50 @@ function Scheduler() {
 
           <ScheduleTable schedule={schedule} />
 
-          {convergenceData && convergenceData.length > 0 && (algorithmUsed === 'ga' || algorithmUsed === 'sa') && (
-            <div className="convergence-chart">
-              <h3>Biểu đồ hội tụ — {algoLabelVi[algorithmUsed] || algorithmUsed}</h3>
+          {convergenceData && convergenceData.length > 0 && (algorithmUsed === 'ga' || algorithmUsed === 'sa' || algorithmUsed === 'hill_climbing' || algorithmUsed === 'minimax') && (
+            <div className="convergence-chart" style={{ 
+              padding: '20px', 
+              backgroundColor: '#ffffff', 
+              borderRadius: '12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              marginTop: '24px'
+            }}>
+              <h3 style={{ marginTop: 0 }}>Biểu đồ hội tụ — {algoLabelVi[algorithmUsed] || algorithmUsed}</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={convergenceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis
                     dataKey="x"
-                    label={{ value: 'Vòng lặp / Thế hệ', position: 'insideBottom', offset: -4 }}
+                    label={{ 
+                      value: algorithmUsed === 'ga' ? 'Thế hệ (Generation)' : 
+                             algorithmUsed === 'minimax' ? 'Đánh giá (Evaluation)' : 
+                             'Vòng lặp (Iteration)', 
+                      position: 'insideBottom', 
+                      offset: -4,
+                      style: { fill: '#475569' }
+                    }}
+                    stroke="#475569"
                   />
-                  <YAxis label={{ value: 'Cost', angle: -90, position: 'insideLeft' }} />
-                  <Tooltip />
+                  <YAxis 
+                    label={{ value: 'Chi phí (Cost)', angle: -90, position: 'insideLeft', style: { fill: '#475569' } }} 
+                    stroke="#475569"
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#ffffff', 
+                      border: '1px solid #e2e8f0', 
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }} 
+                  />
                   <Legend />
                   <Line
                     type="monotone"
                     dataKey="cost"
                     stroke="#2563eb"
+                    strokeWidth={2}
                     dot={false}
-                    name="Chi phí tốt nhất / hiện tại"
+                    name="Chi phí tốt nhất"
                   />
                 </LineChart>
               </ResponsiveContainer>

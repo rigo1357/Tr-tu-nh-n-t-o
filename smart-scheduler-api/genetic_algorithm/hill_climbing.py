@@ -86,9 +86,10 @@ class HillClimbingScheduler(BaseScheduler):
             schedule_result.append({"subject": subject_name, "time": slot_name})
         return schedule_result
 
-    def run(self) -> Tuple[List[dict], float]:
+    def run(self) -> Tuple[List[dict], float, List[Dict[str, Any]]]:
         best_global = None
         best_global_cost = float("inf")
+        convergence_hc: List[Dict[str, Any]] = []  # AI_REPORT
 
         iterations_used = 0
 
@@ -119,6 +120,11 @@ class HillClimbingScheduler(BaseScheduler):
                         neighbor[i] = s
                         c = self._fitness(neighbor)
                         iterations_used += 1
+                        
+                        # Record convergence every 100 iterations
+                        if iterations_used % 100 == 0:  # AI_REPORT
+                            convergence_hc.append({"iteration": iterations_used, "cost": float(best_global_cost)})
+                        
                         if c < best_neighbor_cost:
                             best_neighbor_cost = c
                             best_neighbor = neighbor
@@ -139,5 +145,8 @@ class HillClimbingScheduler(BaseScheduler):
             best_global = self._random_solution()
             best_global_cost = self._fitness(best_global)
 
-        return self._decode(best_global), float(best_global_cost)
+        # Add final convergence point
+        convergence_hc.append({"iteration": iterations_used, "cost": float(best_global_cost)})  # AI_REPORT
+
+        return self._decode(best_global), float(best_global_cost), convergence_hc
 

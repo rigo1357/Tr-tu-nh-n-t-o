@@ -623,49 +623,62 @@ select.form-input option:hover {
 .schedule-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: rgba(15, 23, 42, 0.95);
-  color: #e2e8f0;
+  background-color: #ffffff;
+  color: #1e293b;
+  border: 2px solid #e2e8f0;
 }
 
 .schedule-th {
-  padding: 12px;
-  background-color: #0f172a;
-  border-bottom: 2px solid #22d3ee;
+  padding: 14px;
+  background-color: #0c4a6e;
+  color: #ffffff;
+  border: 1px solid #0369a1;
   position: sticky;
   top: 0;
+  font-weight: 600;
+  text-align: left;
 }
 
 .schedule-td {
   padding: 12px;
   min-width: 150px;
-  border: 1px solid rgba(148, 163, 184, 0.15);
+  border: 1px solid #e2e8f0;
   vertical-align: top;
+  color: #1e293b;
+  background-color: #ffffff;
 }
 
 .convergence-chart {
   margin-top: 32px;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border: 2px solid #e2e8f0;
 }
 
 .convergence-chart h3 {
-  margin: 0 0 16px;
+  margin: 0 0 20px;
   color: #0c4a6e;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  font-weight: 700;
 }
 
 .best-row {
-  background: #f0fff4;
-  font-weight: bold;
+  background-color: #f0fdf4 !important;
+  font-weight: 600;
+}
+
+.best-row td {
+  color: #1e293b !important;
 }
 
 .session-label {
   padding: 12px;
-  background-color: rgba(15, 23, 42, 0.8);
+  background-color: #f8fafc;
   font-weight: bold;
-  border-right: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid #e2e8f0;
+  color: #0c4a6e;
 }
 
 /* --- Section Divider --- */

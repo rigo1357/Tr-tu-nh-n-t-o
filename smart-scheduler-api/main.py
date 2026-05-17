@@ -157,7 +157,7 @@ def _run_scheduler_algorithm(  # AI_ALGORITHM
             subject_details,
         )
     if algo == "hill_climbing":  # AI_ALGORITHM
-        fs, fc = HillClimbingScheduler(
+        return HillClimbingScheduler(
             subject_names,
             time_slots,
             constraints,
@@ -165,7 +165,6 @@ def _run_scheduler_algorithm(  # AI_ALGORITHM
             additional_constraints=additional_constraints,
             subject_details=subject_details,
         ).run()
-        return fs, fc, None
     if algo in ("sa", "simulated_annealing"):  # AI_ALGORITHM
         return SimulatedAnnealingScheduler(
             subject_names,
@@ -176,7 +175,7 @@ def _run_scheduler_algorithm(  # AI_ALGORITHM
             subject_details=subject_details,
         ).run()
     if algo == "minimax":  # AI_ALGORITHM
-        fs, fc = MinimaxScheduler(
+        return MinimaxScheduler(
             subject_names,
             time_slots,
             constraints,
@@ -184,7 +183,6 @@ def _run_scheduler_algorithm(  # AI_ALGORITHM
             additional_constraints=additional_constraints,
             subject_details=subject_details,
         ).run()
-        return fs, fc, None
     raise HTTPException(status_code=400, detail="algorithm không hợp lệ (ga | hill_climbing | sa | minimax)")
 
 # =================
@@ -1219,10 +1217,15 @@ async def _schedule_compute(input: ScheduleInput, current_user: User) -> Dict[st
         
         algo_key = (input.algorithm or "ga").strip().lower()
         convergence_out: Optional[List[Dict[str, Any]]] = None  # AI_REPORT
-        if convergence_raw and algo_key == "ga":
-            convergence_out = [{"x": int(p["generation"]), "cost": float(p["cost"])} for p in convergence_raw]
-        elif convergence_raw and algo_key in ("sa", "simulated_annealing"):
-            convergence_out = [{"x": int(p["iteration"]), "cost": float(p["cost"])} for p in convergence_raw]
+        if convergence_raw:
+            if algo_key == "ga":
+                convergence_out = [{"x": int(p["generation"]), "cost": float(p["cost"])} for p in convergence_raw]
+            elif algo_key in ("sa", "simulated_annealing"):
+                convergence_out = [{"x": int(p["iteration"]), "cost": float(p["cost"])} for p in convergence_raw]
+            elif algo_key == "hill_climbing":
+                convergence_out = [{"x": int(p["iteration"]), "cost": float(p["cost"])} for p in convergence_raw]
+            elif algo_key == "minimax":
+                convergence_out = [{"x": int(p["evaluation"]), "cost": float(p["cost"])} for p in convergence_raw]
 
         out: Dict[str, Any] = {
             "schedule": formatted_schedule,
@@ -1265,7 +1268,7 @@ async def compare_scheduling_algorithms(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Run all 4 algorithms on identical input and return cost + runtime.
+    Run all 4 algorithms on identical input and return cost + runtime + convergence data.
     """
     results: Dict[str, Any] = {}
     best_algorithm: Optional[str] = None
@@ -1282,6 +1285,7 @@ async def compare_scheduling_algorithms(
             "cost": res["cost"],
             "time_ms": elapsed_ms,
             "removed_count": len(res.get("removed_conflicts", [])),
+            "convergence": res.get("convergence", []),  # AI_REPORT: Include convergence data
         }
         if res["cost"] < best_cost:
             best_cost = res["cost"]

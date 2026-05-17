@@ -132,21 +132,27 @@ class MinimaxScheduler(BaseScheduler):
             for i, subject in enumerate(self.subjects)
         ]
 
-    def run(self) -> Tuple[List[dict], float]:
+    def run(self) -> Tuple[List[dict], float, List[Dict[str, Any]]]:
         # Root: MAX chooses the slot for subject 0 that minimizes worst-case outcome.
         assignment = [-1] * self.num_subjects
         best_slot = None
         best_value = float("inf")
+        convergence_minimax: List[Dict[str, Any]] = []  # AI_REPORT
+        evaluation_count = 0
 
         for slot_idx in self._candidate_slot_indices():  # AI_ALGORITHM
             assignment[0] = slot_idx
             value = self.minimax(1, 1, assignment, alpha=float("-inf"), beta=float("inf"), is_maximizing=False)
+            evaluation_count += 1
             if value < best_value:
                 best_value = value
                 best_slot = slot_idx
+            # Record convergence for each root evaluation
+            convergence_minimax.append({"evaluation": evaluation_count, "cost": float(best_value)})  # AI_REPORT
+        
         assignment[0] = best_slot if best_slot is not None else 0
 
         completed = self._complete_assignment(assignment)
         cost = self._fitness(completed)
-        return self._decode(completed), float(cost)
+        return self._decode(completed), float(cost), convergence_minimax
 
